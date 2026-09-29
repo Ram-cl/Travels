@@ -1,96 +1,178 @@
+"""
+Responsive / codebase-integrity audit for the Sri Vengamamba Travels site.
+
+This is a local QA helper only. It READS files under public/ and prints a
+report. It is not linked from any page and does not modify the site, so it
+has zero effect on how the site renders (desktop or mobile).
+
+Runs on the Python standard library only (no pip installs required) and
+locates public/ relative to this file, so it works on any machine.
+
+Usage:  python scratch/verify_responsive.py
+"""
+
 import re
-import os
+import sys
 from pathlib import Path
-from bs4 import BeautifulSoup
 
-PUBLIC_DIR = Path(r"c:\Users\Admin\OneDrive\Desktop\Sri_V_Travels\new one\public")
-HTML_FILES = ["index.html", "about.html", "services.html", "contact.html"]
+# public/ lives one level up from scratch/, resolved relative to THIS file.
+PUBLIC_DIR = Path(__file__).resolve().parent.parent / "public"
 
-def audit_responsive():
-    print("==================================================")
-    print("    RESPONSIVE AUDIT & CODEBASE INTEGRITY CHECK   ")
-    print("==================================================")
-    
-    css_files = [PUBLIC_DIR / "css" / "theme.css", PUBLIC_DIR / "css" / "cinema.css"]
-    for c in css_files:
-        if c.exists():
-            print(f"[OK] CSS exists: {c.name} ({c.stat().st_size} bytes)")
+HTML_FILES = [
+    "index.html",
+    "about.html",
+    "services.html",
+    "contact.html",
+    "gallery.html",
+    "reviews.html",
+    "404.html",
+]
+
+problems = 0
+warnings = 0
+
+
+def ok(msg):
+    print(f"  [OK] {msg}")
+
+
+def warn(msg):
+    global warnings
+    warnings += 1
+    print(f"  [WARN] {msg}")
+
+
+def fail(msg):
+    global problems
+    problems += 1
+    print(f"  [FAIL] {msg}")
+
+
+def meta_viewport_content(html):
+    """Return the content="" of the viewport meta tag, or None if absent."""
+    for tag in re.findall(r"<meta\b[^>]*>", html, re.I):
+        if re.search(r'name\s*=\s*["\']viewport["\']', tag, re.I):
+            m = re.search(r'content\s*=\s*["\']([^"\']*)["\']', tag, re.I)
+            return m.group(1) if m else ""
+    return None
+
+
+def css_versions(html):
+    """Set of ?v=NN cache-busting versions used on css/*.css links."""
+    return set(re.findall(r"css/[\w.-]+\.css\?v=(\d+)", html))
+
+
+def audit():
+    print("=" * 52)
+    print("    RESPONSIVE AUDIT & CODEBASE INTEGRITY CHECK")
+    print("=" * 52)
+    print(f"Project public dir: {PUBLIC_DIR}")
+
+    if not PUBLIC_DIR.exists():
+        fail(f"public/ directory not found at {PUBLIC_DIR}")
+        return
+
+    # ---- CSS-level checks ----------------------------------------------
+    print("\n--- CSS files ---")
+    css_dir = PUBLIC_DIR / "css"
+    combined_css = ""
+    for name in ("theme.css", "cinema.css"):
+        p = css_dir / name
+        if p.exists():
+            combined_css += p.read_text(encoding="utf-8")
+            ok(f"CSS exists: {name} ({p.stat().st_size} bytes)")
         else:
-            print(f"[FAIL] Missing CSS: {c.name}")
-            
-    # Check CSS for horizontal overflow guards
-    cinema_css = (PUBLIC_DIR / "css" / "cinema.css").read_text(encoding="utf-8")
-    if "overflow-x: hidden" in cinema_css or "overflow-x:hidden" in cinema_css:
-        print("[OK] overflow-x: hidden guard present in CSS")
-    else:
-        print("[WARN] overflow-x: hidden missing from CSS")
+            fail(f"Missing CSS: {name}")
 
-    if "clamp(" in cinema_css:
-        print("[OK] Fluid typography with clamp() present in CSS")
-        
+    if re.search(r"overflow-x\s*:\s*hidden", combined_css):
+        ok("overflow-x:hidden overflow guard present")
+    else:
+        warn("overflow-x:hidden guard missing")
+
+    if "clamp(" in combined_css:
+        ok("Fluid typography with clamp() present")
+    else:
+        warn("No clamp() fluid typography found")
+
+    # ---- Per-page checks -----------------------------------------------
+    all_versions = set()
     for html_file in HTML_FILES:
         path = PUBLIC_DIR / html_file
-        if not path.exists():
-            print(f"[FAIL] Missing HTML file: {html_file}")
-            continue
-            
-        content = path.read_text(encoding="utf-8")
-        soup = BeautifulSoup(content, "html.parser")
-        
         print(f"\n--- Auditing: {html_file} ---")
-        
-        # 1. Viewport tag
-        vp = soup.find("meta", attrs={"name": "viewport"})
-        if vp and "width=device-width" in vp.get("content", ""):
-            print(f"  [OK] Viewport tag configured: {vp['content']}")
+        if not path.exists():
+            fail(f"Missing HTML file: {html_file}")
+            continue
+        html = path.read_text(encoding="utf-8")
+
+        # 1. Viewport meta
+        vp = meta_viewport_content(html)
+        if vp and "width=device-width" in vp:
+            ok(f"Viewport configured: {vp}")
         else:
-            print("  [FAIL] Missing or invalid viewport meta tag")
-            
-        # 2. Check for inline fixed pixel widths > 300px
-        elements_with_style = soup.find_all(attrs={"style": True})
-        wide_inline_styles = []
-        for el in elements_with_style:
-            style = el["style"]
-            match = re.search(r"width\s*:\s*(\d+)px", style)
-            if match and int(match.group(1)) > 300:
-                wide_inline_styles.append((el.name, match.group(0)))
-                
-        if wide_inline_styles:
-            print(f"  [WARN] Potential wide inline styles: {wide_inline_styles}")
+            fail("Missing or invalid viewport meta tag")
+
+        # 2. Fixed inline widths > 300px (a classic overflow source).
+        # The (?<![-\w]) lookbehind skips max-width / min-width, which are
+        # caps that still allow shrinking and are safe on mobile.
+        wide = []
+        for style in re.findall(r'style\s*=\s*"([^"]*)"', html, re.I):
+            for m in re.finditer(r"(?<![-\w])width\s*:\s*(\d+)px", style):
+                if int(m.group(1)) > 300:
+                    wide.append(m.group(0))
+        if wide:
+            warn(f"Fixed inline widths >300px: {wide}")
         else:
-            print("  [OK] Zero fixed wide inline pixel widths (>300px)")
-            
-        # 3. Header & Navigation
-        header = soup.find(class_=re.compile(r"\bheader\b"))
-        nav = soup.find("nav")
-        menu_toggle = soup.find(class_=re.compile(r"\bmenu-toggle\b"))
-        if header and nav and menu_toggle:
-            print("  [OK] Header, Nav, and Menu-Toggle all present")
+            ok("No fixed inline widths >300px")
+
+        # 3. Header / nav / mobile menu toggle present
+        has_header = bool(re.search(r'class\s*=\s*"[^"]*\bheader\b', html))
+        has_nav = "<nav" in html.lower()
+        has_toggle = "menu-toggle" in html
+        if has_header and has_nav and has_toggle:
+            ok("Header, nav, and menu-toggle present")
         else:
-            print("  [WARN] Header or Nav structure incomplete")
-            
-        # 4. Images have width and height or responsive styling
-        imgs = soup.find_all("img")
-        unbounded_imgs = []
-        for img in imgs:
-            if not img.get("src"):
-                unbounded_imgs.append("missing src")
-        print(f"  [OK] {len(imgs)} images inspected. All have valid sources.")
-        
-        # 5. Review marquee presence
-        marquee = soup.find(class_=re.compile(r"\bmarquee-track\b"))
-        if marquee:
-            cards = marquee.find_all(class_=re.compile(r"\breview-card\b"))
-            print(f"  [OK] Review Marquee active with {len(cards)} review cards")
-            
-        # 6. Check footer
-        footer = soup.find("footer")
-        if footer:
-            print("  [OK] Semantic Footer present")
-            
-    print("\n==================================================")
-    print("          ALL RESPONSIVE AUDIT CHECKS PASSED      ")
-    print("==================================================")
+            missing = [
+                label
+                for label, present in (
+                    ("header", has_header),
+                    ("nav", has_nav),
+                    ("menu-toggle", has_toggle),
+                )
+                if not present
+            ]
+            warn(f"Header structure incomplete (missing: {', '.join(missing)})")
+
+        # 4. Images all have a src
+        imgs = re.findall(r"<img\b[^>]*>", html, re.I)
+        missing_src = [t for t in imgs if not re.search(r'\bsrc\s*=\s*["\']', t, re.I)]
+        if missing_src:
+            fail(f"{len(missing_src)} image(s) missing src")
+        else:
+            ok(f"{len(imgs)} images inspected, all have src")
+
+        # 5. CSS cache-version consistency within the page
+        vers = css_versions(html)
+        all_versions |= vers
+        if len(vers) > 1:
+            warn(f"Mixed CSS cache versions on this page: {sorted(vers)}")
+
+    # ---- Cross-page cache-version consistency --------------------------
+    print("\n--- Cache-busting version ---")
+    if len(all_versions) <= 1:
+        shared = next(iter(all_versions)) if all_versions else "n/a"
+        ok(f"All pages share one CSS version: v={shared}")
+    else:
+        warn(f"CSS versions differ across pages: {sorted(all_versions)}")
+
+    # ---- Summary --------------------------------------------------------
+    print("\n" + "=" * 52)
+    if problems == 0 and warnings == 0:
+        print("          ALL RESPONSIVE AUDIT CHECKS PASSED")
+    else:
+        print(f"   COMPLETED WITH {problems} FAIL(S), {warnings} WARNING(S)")
+    print("=" * 52)
+
 
 if __name__ == "__main__":
-    audit_responsive()
+    audit()
+    sys.exit(1 if problems else 0)

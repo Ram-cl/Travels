@@ -205,8 +205,8 @@ footer .brand-logo{height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
 .g-more-badge em{font-style:normal;font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--lime)}
 .g-viewall{margin-top:22px;display:inline-flex;align-items:center;gap:12px;background:transparent;border:1px solid rgba(255,255,255,.28);color:#fff;font-family:monospace;font-size:12px;letter-spacing:1px;padding:13px 20px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
 .g-viewall:hover{background:var(--lime);color:var(--dark);border-color:var(--lime)}
-.js-motion .g-tile{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease}
-.js-motion .g-tile.g-in{opacity:1;transform:none}
+.js-motion #galleryMosaic .g-tile{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease}
+.js-motion #galleryMosaic .g-tile.g-in{opacity:1;transform:none}
 @keyframes g-kenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
 .lightbox{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(4,12,10,.93);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .3s ease}
 .lightbox.open{opacity:1}
@@ -1196,3 +1196,19 @@ a, button, input, select, textarea, .filter-tab, .slide-dot, .social-btn {
 }
 
 
+
+
+/* ============================================================
+   MOBILE FIT REFINEMENTS (appended)
+   Every rule below is inside a max-width media query, so it only
+   applies at phone widths and can never affect desktop/tablet.
+   ============================================================ */
+
+/* Small phones: let the hero track the visible viewport (100svh)
+   instead of being forced to a 760px floor. On short screens
+   (e.g. iPhone SE ~667px) that floor pushed the headline and the
+   "SCROLL TO EXPLORE" cue below the fold. 100svh already fills the
+   screen; the 600px floor only guards ultra-short viewports. */
+@media (max-width: 560px){
+  .hero{min-height:600px}
+}
