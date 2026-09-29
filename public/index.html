@@ -36,14 +36,15 @@
   <meta name="geo.position" content="17.3688;78.5524">
   <meta name="ICBM" content="17.3688, 78.5524">
 
-  <!-- Preload Critical LCP Hero Image -->
-  <link rel="preload" as="image" href="assets/images/hero/hero-wide.jpg" fetchpriority="high">
+  <!-- Preload Critical LCP Hero Image (viewport-aware: portrait crop on phones, wide on desktop) -->
+  <link rel="preload" as="image" href="assets/images/hero/hero-wide.jpg" media="(min-width:721px)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/images/hero/hero.jpg?v=2" media="(max-width:720px)" fetchpriority="high">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23071f20'/%3E%3Cpath d='M8 9l8 15 8-15' fill='none' stroke='%23bcff31' stroke-width='4'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/theme.css?v=32">
-  <link rel="stylesheet" href="css/cinema.css?v=32">
+  <link rel="stylesheet" href="css/theme.css?v=33">
+  <link rel="stylesheet" href="css/cinema.css?v=33">
 
   <!-- JSON-LD Structured Data: LocalBusiness & TravelAgency -->
   <script type="application/ld+json">
@@ -187,10 +188,16 @@
     <!-- Hero Section -->
     <section class="hero" id="home" aria-label="Sri Vengamamba Travels">
       <div class="hero-media">
-        <img class="hero-image active" src="assets/images/hero/hero-wide.jpg"
-          alt="White Force Traveller from Sri Vengamamba Travels" loading="eager" fetchpriority="high" decoding="async">
-        <img class="hero-image" src="assets/images/hero/hero-2-wide.jpg"
-          alt="Rear and side view of the Traveller" loading="eager" decoding="async">
+        <picture>
+          <source media="(max-width:720px)" srcset="assets/images/hero/hero.jpg?v=2">
+          <img class="hero-image active" src="assets/images/hero/hero-wide.jpg"
+            alt="White Force Traveller from Sri Vengamamba Travels" loading="eager" fetchpriority="high" decoding="async">
+        </picture>
+        <picture>
+          <source media="(max-width:720px)" srcset="assets/images/hero/hero-2.jpg?v=2">
+          <img class="hero-image" src="assets/images/hero/hero-2-wide.jpg"
+            alt="Rear and side view of the Traveller" loading="eager" decoding="async">
+        </picture>
         <div class="hero-shade"></div>
       </div>
       <div class="hero-content">
