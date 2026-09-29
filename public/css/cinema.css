@@ -1212,3 +1212,26 @@ a, button, input, select, textarea, .filter-tab, .slide-dot, .social-btn {
 @media (max-width: 560px){
   .hero{min-height:600px}
 }
+
+
+/* Phones/tablets (<=720px): keep the hero PHOTO visible behind the
+   text like the desktop hero, instead of hiding it under a near-opaque
+   overlay. The darkening is concentrated at the bottom for legibility
+   and eases off up the frame so the vehicle shows through. A soft text
+   shadow keeps the headline readable over the brighter photo.
+   Scoped to <=720px, so the desktop hero overlay is untouched. */
+@media (max-width: 720px){
+  .hero-shade{
+    background:linear-gradient(0deg,
+      rgba(8,24,16,.94) 0%,
+      rgba(8,24,16,.78) 22%,
+      rgba(8,24,16,.48) 48%,
+      rgba(8,24,16,.2) 74%,
+      rgba(8,24,16,.05) 100%);
+  }
+  .hero h1,
+  .hero .eyebrow,
+  .hero-bottom>p{
+    text-shadow:0 2px 16px rgba(0,0,0,.5);
+  }
+}
