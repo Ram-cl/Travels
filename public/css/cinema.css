@@ -1221,13 +1221,24 @@ a, button, input, select, textarea, .filter-tab, .slide-dot, .social-btn {
    shadow keeps the headline readable over the brighter photo.
    Scoped to <=720px, so the desktop hero overlay is untouched. */
 @media (max-width: 720px){
+  /* ROOT FIX: the global `img,svg,video{height:auto}` hardening rule
+     overrides the hero photo's height:100%. Because .hero-image is
+     absolutely positioned, height:auto makes it render at its intrinsic
+     aspect-ratio height (~a short strip at phone width) instead of filling
+     the hero, leaving dark space below. Restore full coverage so the
+     existing object-fit:cover crops the photo to the whole frame. */
+  .hero-image{height:100%}
+
+  /* With the photo filling again, keep the darkening concentrated at the
+     bottom for text legibility and ease it off up the frame so the vehicle
+     shows through behind the text, like the desktop hero. */
   .hero-shade{
     background:linear-gradient(0deg,
-      rgba(8,24,16,.94) 0%,
-      rgba(8,24,16,.78) 22%,
-      rgba(8,24,16,.48) 48%,
-      rgba(8,24,16,.2) 74%,
-      rgba(8,24,16,.05) 100%);
+      rgba(8,24,16,.95) 0%,
+      rgba(8,24,16,.82) 28%,
+      rgba(8,24,16,.55) 52%,
+      rgba(8,24,16,.28) 76%,
+      rgba(8,24,16,.08) 100%);
   }
   .hero h1,
   .hero .eyebrow,
