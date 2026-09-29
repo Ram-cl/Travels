@@ -1,0 +1,15 @@
+# Sri Vengamamba Tours & Travels - Server Configuration
+
+# Custom 404 Error Page (Returns true HTTP 404 with custom 404.html)
+ErrorDocument 404 /404.html
+
+# Prevent Directory Browsing
+Options -Indexes
+
+# Set Default Charset
+AddDefaultCharset UTF-8
+
+# Browser Caching & Compression (mod_deflate)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+</IfModule>

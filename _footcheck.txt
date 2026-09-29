@@ -1,0 +1,13 @@
+index: 200
+cinema.css v18: True
+site-footer: True
+footer-grid: True
+footer cols (want 3 .footer-col): 3
+footer-social icons (want 4 fsoc): 4
+wordmark: True
+footer anchors missing: none - all resolve
+css .site-footer: True
+css .footer-grid: True
+css .footer-wordmark: True
+assets/images/brand/justdial-icon.png : 200
+assets/images/brand/logo.png : 200
