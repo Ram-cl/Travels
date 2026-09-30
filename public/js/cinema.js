@@ -1,15 +1,43 @@
 const backgroundFilm=document.querySelector('.hero-film');
+const heroHeadline=document.querySelector('.hero-content h1');
+const heroEyebrow=document.querySelector('.hero-content .eyebrow');
+const heroDescription=document.querySelector('.hero-bottom > p');
+const heroPlanButton=document.querySelector('.hero-bottom > .button');
 const fleetFilm=document.querySelector('#fleet-film');
 if(backgroundFilm) {
-  backgroundFilm.src='assets/video/traveller-day.mp4';
-  backgroundFilm.addEventListener('playing',()=>backgroundFilm.classList.add('ready'));
-  backgroundFilm.addEventListener('error',()=>backgroundFilm.classList.remove('ready'));
-  if(typeof reducedMotion==='undefined'||!reducedMotion.matches){
-    backgroundFilm.play().catch(()=>{});
-  }
+  const backgroundFilmVideos=['assets/video/home-journey.mp4','assets/video/traveller-day.mp4'];
+  let backgroundFilmIndex=0;
+  backgroundFilm.addEventListener('playing',()=>{
+    backgroundFilm.classList.add('ready');
+    heroHeadline?.classList.add('video-playing');
+    heroEyebrow?.classList.add('video-playing');
+    heroDescription?.classList.add('video-playing');
+    heroPlanButton?.classList.add('video-playing');
+  });
+  backgroundFilm.addEventListener('pause',()=>{
+    heroHeadline?.classList.remove('video-playing');
+    heroEyebrow?.classList.remove('video-playing');
+    heroDescription?.classList.remove('video-playing');
+    heroPlanButton?.classList.remove('video-playing');
+  });
+  backgroundFilm.addEventListener('error',()=>{
+    backgroundFilm.classList.remove('ready');
+    heroHeadline?.classList.remove('video-playing');
+    heroEyebrow?.classList.remove('video-playing');
+    heroDescription?.classList.remove('video-playing');
+    heroPlanButton?.classList.remove('video-playing');
+  });
+  backgroundFilm.addEventListener('ended',()=>{
+    backgroundFilmIndex=(backgroundFilmIndex+1)%backgroundFilmVideos.length;
+    backgroundFilm.src=backgroundFilmVideos[backgroundFilmIndex];
+    if(!document.hidden)backgroundFilm.play().catch(()=>{});
+  });
+  const motionAllowed=typeof reducedMotion==='undefined'||!reducedMotion.matches;
+  let backgroundFilmDelayElapsed=false;
+  if(motionAllowed)setTimeout(()=>{backgroundFilmDelayElapsed=true;if(!document.hidden)backgroundFilm.play().catch(()=>{});},3000);
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)backgroundFilm.pause();
-    else if(typeof reducedMotion==='undefined'||!reducedMotion.matches)backgroundFilm.play().catch(()=>{});
+    else if(backgroundFilmDelayElapsed&&motionAllowed)backgroundFilm.play().catch(()=>{});
   });
 }
 if(fleetFilm) {

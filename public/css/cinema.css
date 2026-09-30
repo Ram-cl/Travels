@@ -1274,3 +1274,15 @@ a, button, input, select, textarea, .filter-tab, .slide-dot, .social-btn {
   }
 }
 
+.hero-film{display:block}
+.hero-content h1{transition:opacity .35s ease,visibility .35s ease}
+.hero-content h1.video-playing{opacity:0;visibility:hidden}
+.hero-content .eyebrow{transition:opacity .35s ease,visibility .35s ease}
+.hero-content .eyebrow.video-playing{opacity:0;visibility:hidden}
+.hero-bottom>p{transition:opacity .35s ease,visibility .35s ease}
+.hero-bottom>p.video-playing{opacity:0;visibility:hidden}
+.hero-bottom>.button{transition:opacity .35s ease,visibility .35s ease,background .2s,transform .2s}
+.hero-bottom>.button.video-playing{opacity:0;visibility:hidden}
+
+
+
